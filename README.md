@@ -58,11 +58,15 @@ Alembic config lives at the repo root (`alembic.ini`), migrations under
 
 ## Project status
 
-Phase 4 of the architecture doc is done: a working frontend (login, register,
-dashboard, create-ride form, ride history) on top of the Phase 2/3 backend
-(SQLAlchemy models + Alembic migrations, JWT auth, full ride CRUD). The
-create-ride form takes manual lat/lon for now — map autocomplete needs a
-Google Maps API key, which isn't configured yet (only `GOOGLE_MAPS_API_KEY`
-config wiring exists so far — no `maps_service` implementation). The
-matching engine, route overlap, and real-time features
-are implemented in later phases — see section 20 of the architecture doc.
+Phase 5 of the architecture doc is done: a working matching engine v1 on top
+of Phases 1-4 (frontend, JWT auth, ride CRUD, SQLAlchemy models). Given an
+active ride request, `GET /rides/{id}/matches` runs a PostGIS-backed
+eligibility + weighted-scoring pipeline (destination distance, time overlap,
+pickup proximity, gender preference) and returns ranked `SUGGESTED` matches;
+`POST /matches/{id}/accept` and `/reject` drive mutual acceptance through to
+a `CONFIRMED` match. Destination scoring is distance-based for now — true
+route-overlap scoring (and the frontend match-results page) land in Phase 6.
+The create-ride form still takes manual lat/lon since Maps isn't configured
+yet (only `GOOGLE_MAPS_API_KEY` config wiring exists — no `maps_service`
+implementation). Real-time match notifications are Phase 7 — see section 20
+of the architecture doc for the full roadmap.
