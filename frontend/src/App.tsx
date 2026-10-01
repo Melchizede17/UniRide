@@ -1,21 +1,52 @@
-import { useEffect, useState } from "react";
-import { checkHealth } from "./services/api";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+import { Layout } from "./components/Layout";
+import { ProtectedRoute } from "./components/ProtectedRoute";
+import { AuthProvider } from "./hooks/useAuth";
+import { CreateRidePage } from "./pages/CreateRidePage";
+import { DashboardPage } from "./pages/DashboardPage";
+import { HistoryPage } from "./pages/HistoryPage";
+import { LandingPage } from "./pages/LandingPage";
+import { LoginPage } from "./pages/LoginPage";
+import { RegisterPage } from "./pages/RegisterPage";
 import "./App.css";
 
 function App() {
-  const [status, setStatus] = useState<"checking" | "ok" | "error">("checking");
-
-  useEffect(() => {
-    checkHealth()
-      .then(() => setStatus("ok"))
-      .catch(() => setStatus("error"));
-  }, []);
-
   return (
-    <section id="center">
-      <h1>UniRide</h1>
-      <p>Backend connectivity: {status}</p>
-    </section>
+    <BrowserRouter>
+      <AuthProvider>
+        <Layout>
+          <Routes>
+            <Route path="/" element={<LandingPage />} />
+            <Route path="/login" element={<LoginPage />} />
+            <Route path="/register" element={<RegisterPage />} />
+            <Route
+              path="/dashboard"
+              element={
+                <ProtectedRoute>
+                  <DashboardPage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rides/new"
+              element={
+                <ProtectedRoute>
+                  <CreateRidePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/history"
+              element={
+                <ProtectedRoute>
+                  <HistoryPage />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+        </Layout>
+      </AuthProvider>
+    </BrowserRouter>
   );
 }
 
