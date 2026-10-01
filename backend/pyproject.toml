@@ -1,0 +1,9 @@
+[project]
+name = "uniride-backend"
+version = "0.1.0"
+description = "UniRide backend: FastAPI ride-matching service"
+requires-python = "==3.12.*"
+
+[tool.pytest.ini_options]
+pythonpath = ["."]
+testpaths = ["tests"]

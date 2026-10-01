@@ -1,0 +1,22 @@
+# Environment
+.env
+
+# Python
+backend/.venv/
+__pycache__/
+*.pyc
+.pytest_cache/
+*.egg-info/
+
+# Node / Frontend
+frontend/node_modules/
+frontend/dist/
+frontend/.vite/
+
+# Editors / OS
+.DS_Store
+.vscode/
+.idea/
+
+# Docker
+database/pgdata/
