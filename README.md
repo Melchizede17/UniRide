@@ -58,8 +58,9 @@ Alembic config lives at the repo root (`alembic.ini`), migrations under
 
 ## Project status
 
-Phase 2 of the architecture doc is done: SQLAlchemy models for all 7 tables
-(Users, UserPreferences, RideRequests, Routes, Matches, MatchFeedback,
-Notifications) with PostGIS geography columns, plus Alembic migrations.
-Matching engine, auth, ride CRUD APIs, and real-time features are implemented
+Phase 3 of the architecture doc is done: SQLAlchemy models + Alembic migrations
+(Phase 2), plus JWT auth (register/login/me), user preferences, and full ride
+CRUD (`POST /rides`, `GET /rides/me`, `GET /rides/history`,
+`GET|PATCH|DELETE /rides/{id}`). Try it via `http://localhost:8000/docs`.
+The matching engine, route overlap, and real-time features are implemented
 in later phases — see section 20 of the architecture doc.
