@@ -7,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models import RideRequest, RideStatus, User
+from app.schemas.match import MatchRead, match_to_read
 from app.schemas.ride import (
     RideRequestCreate,
     RideRequestRead,
@@ -14,6 +15,7 @@ from app.schemas.ride import (
     coordinates_to_ewkt,
     ride_request_to_read,
 )
+from app.services import matching_service
 
 router = APIRouter(prefix="/rides", tags=["rides"])
 
@@ -77,6 +79,21 @@ def get_ride_request(
 ) -> RideRequestRead:
     ride = _get_owned_ride(ride_id, current_user, db)
     return ride_request_to_read(ride)
+
+
+@router.get("/{ride_id}/matches", response_model=list[MatchRead])
+def get_ride_matches(
+    ride_id: uuid.UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
+) -> list[MatchRead]:
+    ride = _get_owned_ride(ride_id, current_user, db)
+    if ride.status != RideStatus.ACTIVE:
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST,
+            detail=f"Ride is {ride.status.value} and not accepting new matches",
+        )
+    candidates = matching_service.find_matches(db, ride)
+    matches = matching_service.persist_suggested_matches(db, ride, candidates)
+    return [match_to_read(match, current_user.id) for match in matches]
 
 
 @router.patch("/{ride_id}", response_model=RideRequestRead)
