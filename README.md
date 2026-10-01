@@ -46,8 +46,20 @@ npm run dev
 
 Frontend available at `http://localhost:5173`.
 
+### 4. Database migrations
+
+```bash
+cd backend && source .venv/bin/activate
+cd .. && alembic upgrade head
+```
+
+Alembic config lives at the repo root (`alembic.ini`), migrations under
+`database/migrations/`, models under `backend/app/models/`.
+
 ## Project status
 
-Currently at Milestone 1 (Phase 0/1 of the architecture doc): project skeleton and
-frontend/backend/database connectivity. Matching engine, auth, and real-time features
-are implemented in later phases — see section 20 of the architecture doc.
+Phase 2 of the architecture doc is done: SQLAlchemy models for all 7 tables
+(Users, UserPreferences, RideRequests, Routes, Matches, MatchFeedback,
+Notifications) with PostGIS geography columns, plus Alembic migrations.
+Matching engine, auth, ride CRUD APIs, and real-time features are implemented
+in later phases — see section 20 of the architecture doc.
