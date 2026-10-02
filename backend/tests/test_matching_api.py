@@ -120,10 +120,19 @@ def test_accept_both_sides_confirms_match_and_locks_rides(two_users) -> None:
     accept_a = client.post(f"/api/v1/matches/{match_id}/accept", headers=headers_a)
     assert accept_a.status_code == 200
     assert accept_a.json()["status"] == "A_ACCEPTED"
+    assert accept_a.json()["accepted_by_me"] is True
+    assert accept_a.json()["accepted_by_other"] is False
+
+    # the other side, viewing the same match before responding, should see the mirror image
+    pending_view_b = client.get(f"/api/v1/matches/{match_id}", headers=headers_b).json()
+    assert pending_view_b["accepted_by_me"] is False
+    assert pending_view_b["accepted_by_other"] is True
 
     accept_b = client.post(f"/api/v1/matches/{match_id}/accept", headers=headers_b)
     assert accept_b.status_code == 200
     assert accept_b.json()["status"] == "CONFIRMED"
+    assert accept_b.json()["accepted_by_me"] is True
+    assert accept_b.json()["accepted_by_other"] is True
 
     ride_a_after = client.get(f"/api/v1/rides/{ride_a['id']}", headers=headers_a).json()
     ride_b_after = client.get(f"/api/v1/rides/{ride_b['id']}", headers=headers_b).json()
@@ -146,6 +155,10 @@ def test_reject_match(two_users) -> None:
     response = client.post(f"/api/v1/matches/{match_id}/reject", headers=headers_a)
     assert response.status_code == 200
     assert response.json()["status"] == "REJECTED"
+
+    # Re-querying matches shouldn't resurrect the rejected pair as a fresh suggestion
+    matches_after_reject = client.get(f"/api/v1/rides/{ride_a['id']}/matches", headers=headers_a).json()
+    assert matches_after_reject == []
 
 
 def test_cannot_accept_someone_elses_match(two_users) -> None:

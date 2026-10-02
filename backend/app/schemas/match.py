@@ -18,14 +18,23 @@ class MatchRead(BaseModel):
     route_overlap_score: float
     total_score: float
     status: MatchStatus
+    accepted_by_me: bool
+    accepted_by_other: bool
     created_at: datetime
 
 
 def match_to_read(match: Match, current_user_id: uuid.UUID) -> MatchRead:
-    if match.request_a.user_id == current_user_id:
-        my_ride, other_ride = match.request_a, match.request_b
+    is_a = match.request_a.user_id == current_user_id
+    my_ride, other_ride = (match.request_a, match.request_b) if is_a else (match.request_b, match.request_a)
+
+    if match.status == MatchStatus.CONFIRMED:
+        accepted_by_me = accepted_by_other = True
+    elif match.status == MatchStatus.A_ACCEPTED:
+        accepted_by_me, accepted_by_other = is_a, not is_a
+    elif match.status == MatchStatus.B_ACCEPTED:
+        accepted_by_me, accepted_by_other = not is_a, is_a
     else:
-        my_ride, other_ride = match.request_b, match.request_a
+        accepted_by_me = accepted_by_other = False
 
     return MatchRead(
         id=match.id,
@@ -38,5 +47,7 @@ def match_to_read(match: Match, current_user_id: uuid.UUID) -> MatchRead:
         route_overlap_score=match.route_overlap_score,
         total_score=match.total_score,
         status=match.status,
+        accepted_by_me=accepted_by_me,
+        accepted_by_other=accepted_by_other,
         created_at=match.created_at,
     )
