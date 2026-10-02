@@ -128,3 +128,56 @@
   border-radius: 999px;
   background: var(--accent-bg, #eee);
 }
+
+.ride-card-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.match-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  padding: 12px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.match-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.score-breakdown {
+  display: flex;
+  gap: 16px;
+  margin: 0;
+}
+
+.score-breakdown div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  font-size: 0.8rem;
+}
+
+.score-breakdown dt {
+  opacity: 0.7;
+}
+
+.score-breakdown dd {
+  margin: 0;
+  font-weight: 600;
+}
+
+.match-status-note {
+  font-size: 0.85rem;
+  opacity: 0.8;
+}
+
+.match-actions {
+  display: flex;
+  gap: 8px;
+}

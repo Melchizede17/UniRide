@@ -1,3 +1,4 @@
+import type { Match } from "../types/match";
 import type { RideRequest, RideRequestInput } from "../types/ride";
 import type { Token, User, UserPreferences } from "../types/user";
 
@@ -90,6 +91,18 @@ export function getRideRequest(token: string, rideId: string): Promise<RideReque
 
 export function cancelRideRequest(token: string, rideId: string): Promise<void> {
   return request(`/rides/${rideId}`, { method: "DELETE" }, token);
+}
+
+export function getRideMatches(token: string, rideId: string): Promise<Match[]> {
+  return request(`/rides/${rideId}/matches`, {}, token);
+}
+
+export function acceptMatch(token: string, matchId: string): Promise<Match> {
+  return request(`/matches/${matchId}/accept`, { method: "POST" }, token);
+}
+
+export function rejectMatch(token: string, matchId: string): Promise<Match> {
+  return request(`/matches/${matchId}/reject`, { method: "POST" }, token);
 }
 
 export { ApiError };

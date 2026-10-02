@@ -1,3 +1,4 @@
+import { Link } from "react-router-dom";
 import type { RideRequest } from "../types/ride";
 
 export function RideCard({
@@ -23,11 +24,14 @@ export function RideCard({
           {ride.passenger_count} passenger{ride.passenger_count > 1 ? "s" : ""}
         </span>
       </div>
-      {canCancel && (
-        <button type="button" onClick={() => onCancel(ride.id)}>
-          Cancel
-        </button>
-      )}
+      <div className="ride-card-actions">
+        {ride.status === "ACTIVE" && <Link to={`/rides/${ride.id}/matches`}>Find Matches</Link>}
+        {canCancel && (
+          <button type="button" onClick={() => onCancel(ride.id)}>
+            Cancel
+          </button>
+        )}
+      </div>
     </article>
   );
 }

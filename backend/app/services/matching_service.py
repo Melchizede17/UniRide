@@ -92,6 +92,9 @@ def find_matches(db: Session, ride: RideRequest) -> list[MatchCandidate]:
     return candidates[:MAX_CANDIDATES]
 
 
+REJECTED_STATUSES = (MatchStatus.REJECTED, MatchStatus.CANCELLED, MatchStatus.EXPIRED)
+
+
 def persist_suggested_matches(db: Session, ride: RideRequest, candidates: list[MatchCandidate]) -> list[Match]:
     matches: list[Match] = []
     for candidate in candidates:
@@ -101,10 +104,15 @@ def persist_suggested_matches(db: Session, ride: RideRequest, candidates: list[M
                 or_(
                     and_(Match.request_a_id == ride.id, Match.request_b_id == other_id),
                     and_(Match.request_a_id == other_id, Match.request_b_id == ride.id),
-                ),
-                Match.status.in_((MatchStatus.SUGGESTED, MatchStatus.A_ACCEPTED, MatchStatus.B_ACCEPTED)),
+                )
             )
         )
+
+        if existing is not None and existing.status in REJECTED_STATUSES:
+            # Already rejected/cancelled once: don't resurrect it as a fresh
+            # SUGGESTED match just because the candidate still scores well.
+            continue
+
         if existing is None:
             existing = Match(request_a_id=ride.id, request_b_id=other_id, route_overlap_score=0.0)
             db.add(existing)

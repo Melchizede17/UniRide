@@ -7,6 +7,7 @@ import { DashboardPage } from "./pages/DashboardPage";
 import { HistoryPage } from "./pages/HistoryPage";
 import { LandingPage } from "./pages/LandingPage";
 import { LoginPage } from "./pages/LoginPage";
+import { MatchResultsPage } from "./pages/MatchResultsPage";
 import { RegisterPage } from "./pages/RegisterPage";
 import "./App.css";
 
@@ -32,6 +33,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <CreateRidePage />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/rides/:rideId/matches"
+              element={
+                <ProtectedRoute>
+                  <MatchResultsPage />
                 </ProtectedRoute>
               }
             />
