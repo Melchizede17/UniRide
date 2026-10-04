@@ -16,6 +16,12 @@ class Notification(Base):
     type: Mapped[str]
     message: Mapped[str]
     is_read: Mapped[bool] = mapped_column(default=False)
+    # Not in the architecture doc's section 8.7 schema; added so the frontend
+    # can deep-link a notification to the ride it's about. SET NULL on delete
+    # so a historic notification survives the ride being removed.
+    related_ride_id: Mapped[uuid.UUID | None] = mapped_column(
+        ForeignKey("ride_requests.id", ondelete="SET NULL")
+    )
     created_at: Mapped[datetime] = mapped_column(server_default=func.now())
 
     user: Mapped["User"] = relationship(back_populates="notifications")  # noqa: F821

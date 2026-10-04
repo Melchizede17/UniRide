@@ -1,6 +1,8 @@
 import type { ReactNode } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "../hooks/useAuth";
+import { useNotifications } from "../hooks/useNotifications";
+import { ToastContainer } from "./ToastContainer";
 
 export function Layout({ children }: { children: ReactNode }) {
   const { user, logout } = useAuth();
@@ -22,6 +24,7 @@ export function Layout({ children }: { children: ReactNode }) {
             <Link to="/dashboard">Dashboard</Link>
             <Link to="/rides/new">Find a Ride</Link>
             <Link to="/history">History</Link>
+            <NotificationsBell />
             <span className="user-name">{user.display_name}</span>
             <button type="button" onClick={handleLogout}>
               Log out
@@ -30,6 +33,17 @@ export function Layout({ children }: { children: ReactNode }) {
         )}
       </header>
       <main className="app-main">{children}</main>
+      {user && <ToastContainer />}
     </div>
+  );
+}
+
+function NotificationsBell() {
+  const { unreadCount } = useNotifications();
+  return (
+    <Link to="/notifications" className="notifications-bell">
+      Notifications
+      {unreadCount > 0 && <span className="notifications-badge">{unreadCount}</span>}
+    </Link>
   );
 }

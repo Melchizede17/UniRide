@@ -15,7 +15,7 @@ from app.schemas.ride import (
     coordinates_to_ewkt,
     ride_request_to_read,
 )
-from app.services import matching_service, route_service
+from app.services import matching_service, notification_service, route_service
 
 router = APIRouter(prefix="/rides", tags=["rides"])
 
@@ -87,7 +87,7 @@ def get_ride_request(
 
 
 @router.get("/{ride_id}/matches", response_model=list[MatchRead])
-def get_ride_matches(
+async def get_ride_matches(
     ride_id: uuid.UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> list[MatchRead]:
     ride = _get_owned_ride(ride_id, current_user, db)
@@ -97,7 +97,18 @@ def get_ride_matches(
             detail=f"Ride is {ride.status.value} and not accepting new matches",
         )
     candidates = matching_service.find_matches(db, ride)
-    matches = matching_service.persist_suggested_matches(db, ride, candidates)
+    matches, newly_created = matching_service.persist_suggested_matches(db, ride, candidates)
+
+    for match in newly_created:
+        other_ride = match.request_b if match.request_a_id == ride.id else match.request_a
+        await notification_service.notify_user(
+            db,
+            other_ride.user_id,
+            "MATCH_FOUND",
+            f"A new ride match was found for your trip to {other_ride.destination_address}.",
+            related_ride_id=other_ride.id,
+        )
+
     return [match_to_read(match, current_user.id) for match in matches]
 
 
