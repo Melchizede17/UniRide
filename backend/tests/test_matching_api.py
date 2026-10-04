@@ -1,9 +1,11 @@
 import uuid
+from unittest.mock import patch
 
 import pytest
 from fastapi.testclient import TestClient
 
 from app.main import app
+from app.services.maps_service import RouteLookupError
 
 client = TestClient(app)
 
@@ -78,6 +80,9 @@ def test_compatible_rides_match(two_users) -> None:
     assert 0.0 < match["total_score"] <= 1.0
     assert match["pickup_score"] > 0.9
     assert match["time_score"] == pytest.approx(0.75, abs=0.01)
+    # Both rides go Stony Brook -> JFK, so the real routed path should show
+    # substantial overlap rather than falling back to the Phase 5 stand-in.
+    assert match["route_overlap_score"] > 0.5
 
 
 def test_far_destination_does_not_match(two_users) -> None:
@@ -177,3 +182,21 @@ def test_cannot_accept_someone_elses_match(two_users) -> None:
     response = client.get(f"/api/v1/matches/{match_id}", headers=headers_c)
     assert response.status_code == 404
     _delete_user(email_c)
+
+
+def test_route_lookup_failure_falls_back_to_distance_score(two_users) -> None:
+    headers_a, headers_b = two_users
+    ride_a = _create_ride(headers_a)
+
+    with patch("app.services.route_service.get_route", side_effect=RouteLookupError("simulated failure")):
+        _create_ride(
+            headers_b,
+            pickup={"latitude": 40.9150, "longitude": -73.1240},
+            departure_time="2026-10-10T16:10:00",
+        )
+
+    matches = client.get(f"/api/v1/rides/{ride_a['id']}/matches", headers=headers_a).json()
+    assert len(matches) == 1
+    match = matches[0]
+    assert match["route_overlap_score"] == 0.0
+    assert 0.0 < match["total_score"] <= 1.0

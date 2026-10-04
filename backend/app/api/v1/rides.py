@@ -15,7 +15,7 @@ from app.schemas.ride import (
     coordinates_to_ewkt,
     ride_request_to_read,
 )
-from app.services import matching_service
+from app.services import matching_service, route_service
 
 router = APIRouter(prefix="/rides", tags=["rides"])
 
@@ -48,6 +48,11 @@ def create_ride_request(
     db.add(ride)
     db.commit()
     db.refresh(ride)
+
+    route_service.refresh_route_for_ride(db, ride)
+    db.commit()
+    db.refresh(ride)
+
     return ride_request_to_read(ride)
 
 
@@ -106,18 +111,27 @@ def update_ride_request(
     ride = _get_owned_ride(ride_id, current_user, db)
     data = payload.model_dump(exclude_unset=True)
 
+    location_changed = False
     if "pickup" in data:
         ride.pickup_point = coordinates_to_ewkt(payload.pickup)
         data.pop("pickup")
+        location_changed = True
     if "destination" in data:
         ride.destination_point = coordinates_to_ewkt(payload.destination)
         data.pop("destination")
+        location_changed = True
 
     for field, value in data.items():
         setattr(ride, field, value)
 
     db.commit()
     db.refresh(ride)
+
+    if location_changed:
+        route_service.refresh_route_for_ride(db, ride)
+        db.commit()
+        db.refresh(ride)
+
     return ride_request_to_read(ride)
 
 
