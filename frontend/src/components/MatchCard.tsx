@@ -40,8 +40,12 @@ export function MatchCard({
 
       <dl className="score-breakdown">
         <div>
-          <dt>Destination</dt>
+          <dt>Route match</dt>
           <dd>{pct(match.destination_score)}</dd>
+        </div>
+        <div>
+          <dt>Overlap</dt>
+          <dd>{pct(match.route_overlap_score)}</dd>
         </div>
         <div>
           <dt>Time</dt>
