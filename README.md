@@ -6,7 +6,8 @@ transportation costs. UniRide is a coordination/matching platform — not a ride
 service and does not provide drivers.
 
 See `UniRide_Complete_Project_Architecture.md` for the full architecture, data model,
-matching algorithm design, and phased roadmap.
+matching algorithm design, and phased roadmap. See `DEPLOYMENT.md` for deploying
+to Vercel + Render + Supabase. Repo: https://github.com/Melchizede17/UniRide
 
 ## Stack
 
@@ -71,7 +72,14 @@ for manual exploration instead).
 
 ## Project status
 
-Phases 1-8 of the architecture doc are done end-to-end. Creating a ride fetches
+Phases 1-8 of the architecture doc are done end-to-end, and Phase 10 (deployment)
+is prepared but not yet live: the GitHub repo, `render.yaml`, Vercel config, CI
+workflow (`.github/workflows/ci.yml`), and production-readiness fixes (real
+`SECRET_KEY` requirement in production, CORS) are all in place — see
+`DEPLOYMENT.md` for the remaining account-creation/connection steps that need
+a human (Supabase/Render/Vercel signups, env var entry in each dashboard).
+
+Creating a ride fetches
 its real driving route from the Google Routes API and stores the geometry;
 "Find Matches" runs a PostGIS eligibility pipeline (time/pickup/preference)
 and scores candidates by real route overlap (buffer + intersection on the
