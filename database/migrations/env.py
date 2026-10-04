@@ -16,7 +16,10 @@ from app.core.database import Base  # noqa: E402
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
 config = context.config
-config.set_main_option("sqlalchemy.url", settings.database_url)
+# configparser treats "%" as interpolation syntax, so a percent-encoded
+# character in the URL (e.g. "%40" for "@" in a password) must be escaped
+# as "%%" before being stored, or set_main_option raises ValueError.
+config.set_main_option("sqlalchemy.url", settings.database_url.replace("%", "%%"))
 
 # Interpret the config file for Python logging.
 # This line sets up loggers basically.
