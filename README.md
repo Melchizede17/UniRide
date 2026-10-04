@@ -57,9 +57,21 @@ cd .. && alembic upgrade head
 Alembic config lives at the repo root (`alembic.ini`), migrations under
 `database/migrations/`, models under `backend/app/models/`.
 
+### 5. Evaluate matching quality
+
+```bash
+cd backend && source .venv/bin/activate
+cd .. && python scripts/evaluate_matching.py
+```
+
+Seeds a synthetic dataset, measures matching quality against section 18's
+metrics, writes a report to `output/matching_evaluation_report.md`, then
+cleans the synthetic data back up (pass `--keep-data` to leave it in place
+for manual exploration instead).
+
 ## Project status
 
-Phases 1-7 of the architecture doc are done end-to-end. Creating a ride fetches
+Phases 1-8 of the architecture doc are done end-to-end. Creating a ride fetches
 its real driving route from the Google Routes API and stores the geometry;
 "Find Matches" runs a PostGIS eligibility pipeline (time/pickup/preference)
 and scores candidates by real route overlap (buffer + intersection on the
@@ -68,7 +80,8 @@ stays on-demand (click "Find Matches"), but the *notification* side is real-time
 finding a new match, accepting, confirming, and rejecting all push a live
 WebSocket notification to the other rider (bell icon + toast + `/notifications`
 inbox in the frontend), backed by `GET/PATCH /notifications`. Falls back to
-distance-based destination scoring if a route lookup ever fails. The create-ride
-form still takes manual lat/lon (no map picker/autocomplete yet — that's a
-separate Places API integration) — see section 20 of the architecture doc for
-the full roadmap.
+distance-based destination scoring if a route lookup ever fails. `scripts/evaluate_matching.py`
+measures matching quality against a synthetic dataset and writes a report to
+`output/`. The create-ride form still takes manual lat/lon (no map
+picker/autocomplete yet — that's a separate Places API integration) — see
+section 20 of the architecture doc for the full roadmap.
