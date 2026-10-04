@@ -4,6 +4,7 @@ from unittest.mock import patch
 import pytest
 from fastapi.testclient import TestClient
 
+from app.core.config import settings
 from app.main import app
 from app.services.maps_service import RouteLookupError
 
@@ -80,9 +81,12 @@ def test_compatible_rides_match(two_users) -> None:
     assert 0.0 < match["total_score"] <= 1.0
     assert match["pickup_score"] > 0.9
     assert match["time_score"] == pytest.approx(0.75, abs=0.01)
-    # Both rides go Stony Brook -> JFK, so the real routed path should show
-    # substantial overlap rather than falling back to the Phase 5 stand-in.
-    assert match["route_overlap_score"] > 0.5
+    if settings.google_maps_api_key:
+        # Both rides go Stony Brook -> JFK, so the real routed path should show
+        # substantial overlap rather than falling back to the Phase 5 stand-in.
+        # Skipped in environments (e.g. CI without the secret) where routing
+        # falls back to the Phase 5 distance-based score instead.
+        assert match["route_overlap_score"] > 0.5
 
 
 def test_far_destination_does_not_match(two_users) -> None:

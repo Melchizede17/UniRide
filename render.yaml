@@ -1,0 +1,15 @@
+services:
+  - type: web
+    name: uniride-backend
+    runtime: python
+    plan: free
+    buildCommand: pip install -r backend/requirements.txt
+    startCommand: cd backend && python -m alembic -c ../alembic.ini upgrade head && uvicorn app.main:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: ENVIRONMENT
+        value: production
+      - key: PYTHON_VERSION
+        value: 3.12.14
+      # Set these as real secrets in the Render dashboard, not here:
+      # DATABASE_URL, SECRET_KEY, GOOGLE_MAPS_API_KEY, CORS_ORIGINS
