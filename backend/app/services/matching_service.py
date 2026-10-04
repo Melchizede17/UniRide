@@ -135,8 +135,13 @@ def find_matches(db: Session, ride: RideRequest) -> list[MatchCandidate]:
 REJECTED_STATUSES = (MatchStatus.REJECTED, MatchStatus.CANCELLED, MatchStatus.EXPIRED)
 
 
-def persist_suggested_matches(db: Session, ride: RideRequest, candidates: list[MatchCandidate]) -> list[Match]:
+def persist_suggested_matches(
+    db: Session, ride: RideRequest, candidates: list[MatchCandidate]
+) -> tuple[list[Match], list[Match]]:
+    """Returns (all_matches, newly_created_matches) - the latter for callers
+    that want to notify the other side only once, not on every re-query."""
     matches: list[Match] = []
+    newly_created: list[Match] = []
     for candidate in candidates:
         other_id = candidate.ride_request.id
         existing = db.scalar(
@@ -156,6 +161,7 @@ def persist_suggested_matches(db: Session, ride: RideRequest, candidates: list[M
         if existing is None:
             existing = Match(request_a_id=ride.id, request_b_id=other_id)
             db.add(existing)
+            newly_created.append(existing)
 
         existing.destination_score = candidate.destination_score
         existing.time_score = candidate.time_score
@@ -167,4 +173,4 @@ def persist_suggested_matches(db: Session, ride: RideRequest, candidates: list[M
 
     db.commit()
     matches.sort(key=lambda m: m.total_score, reverse=True)
-    return matches
+    return matches, newly_created

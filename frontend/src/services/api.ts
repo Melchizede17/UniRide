@@ -1,4 +1,5 @@
 import type { Match } from "../types/match";
+import type { AppNotification } from "../types/notification";
 import type { RideRequest, RideRequestInput } from "../types/ride";
 import type { Token, User, UserPreferences } from "../types/user";
 
@@ -103,6 +104,19 @@ export function acceptMatch(token: string, matchId: string): Promise<Match> {
 
 export function rejectMatch(token: string, matchId: string): Promise<Match> {
   return request(`/matches/${matchId}/reject`, { method: "POST" }, token);
+}
+
+export function listNotifications(token: string): Promise<AppNotification[]> {
+  return request("/notifications", {}, token);
+}
+
+export function markNotificationRead(token: string, notificationId: string): Promise<AppNotification> {
+  return request(`/notifications/${notificationId}/read`, { method: "PATCH" }, token);
+}
+
+export function getWebSocketUrl(token: string): string {
+  const wsBase = API_BASE_URL.replace(/^http/, "ws");
+  return `${wsBase}/ws/matches?token=${encodeURIComponent(token)}`;
 }
 
 export { ApiError };

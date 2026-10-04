@@ -8,6 +8,7 @@ from app.api.deps import get_current_user
 from app.core.database import get_db
 from app.models import Match, MatchStatus, RideStatus, User
 from app.schemas.match import MatchRead, match_to_read
+from app.services import notification_service
 
 router = APIRouter(prefix="/matches", tags=["matches"])
 
@@ -43,7 +44,7 @@ def get_match(
 
 
 @router.post("/{match_id}/accept", response_model=MatchRead)
-def accept_match(
+async def accept_match(
     match_id: uuid.UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> MatchRead:
     match = _get_match_for_user(match_id, current_user, db)
@@ -51,6 +52,7 @@ def accept_match(
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Match is already {match.status.value}")
 
     is_a = current_user.id == match.request_a.user_id
+    other_ride = match.request_b if is_a else match.request_a
     other_already_accepted = (
         match.status == MatchStatus.B_ACCEPTED if is_a else match.status == MatchStatus.A_ACCEPTED
     )
@@ -60,23 +62,52 @@ def accept_match(
         match.request_a.status = RideStatus.MATCHED
         match.request_b.status = RideStatus.MATCHED
         _cancel_other_matches_for_rides(db, match)
+        db.commit()
+        db.refresh(match)
+
+        await notification_service.notify_user(
+            db, match.request_a.user_id, "MATCH_CONFIRMED", "Your ride match is confirmed!", related_ride_id=match.request_a_id
+        )
+        await notification_service.notify_user(
+            db, match.request_b.user_id, "MATCH_CONFIRMED", "Your ride match is confirmed!", related_ride_id=match.request_b_id
+        )
     else:
         match.status = MatchStatus.A_ACCEPTED if is_a else MatchStatus.B_ACCEPTED
+        db.commit()
+        db.refresh(match)
 
-    db.commit()
-    db.refresh(match)
+        await notification_service.notify_user(
+            db,
+            other_ride.user_id,
+            "MATCH_ACCEPTED",
+            f"{current_user.display_name} accepted your ride match — your turn to respond.",
+            related_ride_id=other_ride.id,
+        )
+
     return match_to_read(match, current_user.id)
 
 
 @router.post("/{match_id}/reject", response_model=MatchRead)
-def reject_match(
+async def reject_match(
     match_id: uuid.UUID, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)
 ) -> MatchRead:
     match = _get_match_for_user(match_id, current_user, db)
     if match.status in (MatchStatus.CONFIRMED, MatchStatus.CANCELLED, MatchStatus.EXPIRED):
         raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail=f"Match is already {match.status.value}")
 
+    is_a = current_user.id == match.request_a.user_id
+    other_ride = match.request_b if is_a else match.request_a
+
     match.status = MatchStatus.REJECTED
     db.commit()
     db.refresh(match)
+
+    await notification_service.notify_user(
+        db,
+        other_ride.user_id,
+        "MATCH_REJECTED",
+        "A ride match was declined.",
+        related_ride_id=other_ride.id,
+    )
+
     return match_to_read(match, current_user.id)
