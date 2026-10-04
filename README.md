@@ -59,14 +59,16 @@ Alembic config lives at the repo root (`alembic.ini`), migrations under
 
 ## Project status
 
-Phases 1-6 of the architecture doc are done end-to-end. Creating a ride fetches
+Phases 1-7 of the architecture doc are done end-to-end. Creating a ride fetches
 its real driving route from the Google Routes API and stores the geometry;
 "Find Matches" runs a PostGIS eligibility pipeline (time/pickup/preference)
 and scores candidates by real route overlap (buffer + intersection on the
-stored route geometries) plus time/pickup/preference compatibility, then
-Accept/Decline drives mutual acceptance through to a confirmed match. Falls
-back to distance-based destination scoring if a route lookup ever fails.
-The create-ride form still takes manual lat/lon (no map picker/autocomplete
-yet — that's a separate Places API integration). Real-time match
-notifications are Phase 7 — see section 20 of the architecture doc for the
-full roadmap.
+stored route geometries) plus time/pickup/preference compatibility. Matching
+stays on-demand (click "Find Matches"), but the *notification* side is real-time:
+finding a new match, accepting, confirming, and rejecting all push a live
+WebSocket notification to the other rider (bell icon + toast + `/notifications`
+inbox in the frontend), backed by `GET/PATCH /notifications`. Falls back to
+distance-based destination scoring if a route lookup ever fails. The create-ride
+form still takes manual lat/lon (no map picker/autocomplete yet — that's a
+separate Places API integration) — see section 20 of the architecture doc for
+the full roadmap.
