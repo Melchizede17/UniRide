@@ -27,6 +27,7 @@ docker compose up -d
 
 ```bash
 cd backend
+cp .env.example .env   # fill in GOOGLE_MAPS_API_KEY (needs Routes API enabled)
 pyenv local 3.12.14   # already pinned via .python-version
 python -m venv .venv
 source .venv/bin/activate
@@ -58,13 +59,14 @@ Alembic config lives at the repo root (`alembic.ini`), migrations under
 
 ## Project status
 
-Phases 1-5 of the architecture doc are done end-to-end, including the
-frontend match-results page: create a ride, hit "Find Matches" to run the
-PostGIS-backed eligibility + weighted-scoring pipeline (destination
-distance, time overlap, pickup proximity, gender preference), then
-Accept/Decline each suggested match through to a confirmed match. Destination
-scoring is distance-based for now — true route-overlap scoring is Phase 6.
-The create-ride form still takes manual lat/lon since Maps isn't configured
-yet (only `GOOGLE_MAPS_API_KEY` config wiring exists — no `maps_service`
-implementation). Real-time match notifications are Phase 7 — see section 20
-of the architecture doc for the full roadmap.
+Phases 1-6 of the architecture doc are done end-to-end. Creating a ride fetches
+its real driving route from the Google Routes API and stores the geometry;
+"Find Matches" runs a PostGIS eligibility pipeline (time/pickup/preference)
+and scores candidates by real route overlap (buffer + intersection on the
+stored route geometries) plus time/pickup/preference compatibility, then
+Accept/Decline drives mutual acceptance through to a confirmed match. Falls
+back to distance-based destination scoring if a route lookup ever fails.
+The create-ride form still takes manual lat/lon (no map picker/autocomplete
+yet — that's a separate Places API integration). Real-time match
+notifications are Phase 7 — see section 20 of the architecture doc for the
+full roadmap.
